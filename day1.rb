@@ -9,11 +9,10 @@ puts modules.inject(0) { |memo, m| memo + ((m / 3) - 2) }
 def calculate_fuel(m)
   fuel = (m / 3) - 2
   if fuel > 0
-    fuel += calculate_fuel(fuel)
+    fuel + calculate_fuel(fuel)
   else
-    fuel = 0
+    0
   end
-  fuel
 end
 
 puts modules.inject(0) { |memo, m| memo += calculate_fuel(m) }
