@@ -27,10 +27,17 @@ end
 grid = $stdin.readlines.map { |line| line.strip.chars }.compact
 
 max = 0
+max_location = nil
 grid.each_with_index do |row, y|
   row.each_with_index do |location, x|
-    max = [count_asteroids(grid, x, y), max].max if location == '#'
+    if location == '#'
+      count = count_asteroids(grid, x, y)
+      if count > max
+        max = count
+        max_location = [x, y]
+      end
+    end
   end
 end
 
-puts max
+puts "#{max} at (#{x}, #{y})"
