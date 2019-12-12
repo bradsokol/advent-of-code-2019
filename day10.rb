@@ -5,12 +5,7 @@ require 'pry'
 require 'set'
 
 def count_asteroids(grid, station_x, station_y)
-  ranges = [
-    [((station_x + 1)...grid[station_y].length), (0..station_y)],
-    [(station_x...grid[station_y].length), ((station_y + 1)...grid.length)],
-    [(0...station_x), (station_y...grid.length)],
-    [(0..station_x), (0...station_y)],
-  ]
+  ranges = build_ranges(grid, station_x, station_y)
 
   ranges.reduce(0) do |sum, quadrant_ranges|
     vectors = Set.new
@@ -25,13 +20,17 @@ def count_asteroids(grid, station_x, station_y)
   end
 end
 
-def build_targetting(grid, station_x, station_y)
-  ranges = [
-    [((station_x + 1)...grid[station_y].length), (0..station_y)],
-    [(station_x...grid[station_y].length), ((station_y + 1)...grid.length)],
-    [(0...station_x), (station_y...grid.length)],
-    [(0..station_x), (0...station_y)],
+def build_ranges(grid, x, y)
+  [
+    [((x + 1)...grid[y].length), (0..y)],
+    [(x...grid[y].length), ((y + 1)...grid.length)],
+    [(0...x), (y...grid.length)],
+    [(0..x), (0...y)],
   ]
+end
+
+def build_targetting(grid, station_x, station_y)
+  ranges = build_ranges(grid, station_x, station_y)
 
   quadrants = []
   ranges.each do |x_range, y_range|
@@ -50,6 +49,7 @@ def build_targetting(grid, station_x, station_y)
         quadrant[trajectory] << [distance, [x, y]]
       end
     end
+    quadrant.values.each { |v| v.sort! { |a, b| a.first <=> b.first } }
     quadrants << quadrant
   end
   quadrants
@@ -82,42 +82,25 @@ puts "#{max} at (#{max_location[0]}, #{max_location[1]})"
 q1, q2, q3, q4 = build_targetting(grid, max_location[0], max_location[1])
 
 iterations = 0
-point = nil
 while true do
   q1.keys.sort.each do |trajectory|
-    next_target = q1[trajectory].sort { |a, b| a.first <=> b.first }.first
-    point = next_target.last
-    # puts "#{iterations + 1}: (#{point[0]}, #{point[1]})"
-    q1[trajectory].delete(next_target)
+    next_target = q1[trajectory].shift
     iterations += 1
-    done(point) if iterations == 200
+    done(next_target.last) if iterations == 200
   end
-  # puts '----'
   q2.keys.sort.each do |trajectory|
-    next_target = q2[trajectory].sort { |a, b| a.first <=> b.first }.first
-    point = next_target.last
-    # puts "#{iterations + 1}: (#{point[0]}, #{point[1]})"
-    q2[trajectory].delete(next_target)
+    next_target = q2[trajectory].shift
     iterations += 1
-    done(point) if iterations == 200
+    done(next_target.last) if iterations == 200
   end
-  # puts '----'
   q3.keys.sort.reverse.each do |trajectory|
-    next_target = q3[trajectory].sort { |a, b| a.first <=> b.first }.first
-    point = next_target.last
-    # puts "#{iterations + 1}: (#{point[0]}, #{point[1]})"
-    q3[trajectory].delete(next_target)
+    next_target = q3[trajectory].shift
     iterations += 1
-    done(point) if iterations == 200
+    done(next_target.last) if iterations == 200
   end
-  # puts '----'
   q4.keys.sort.each do |trajectory|
-    next_target = q4[trajectory].sort { |a, b| a.first <=> b.first }.first
-    point = next_target.last
-    # puts "#{iterations + 1}: (#{point[0]}, #{point[1]})"
-    q4[trajectory].delete(next_target)
+    next_target = q4[trajectory].shift
     iterations += 1
-    done(point) if iterations == 200
+    done(next_target.last) if iterations == 200
   end
-  # puts '----'
 end
