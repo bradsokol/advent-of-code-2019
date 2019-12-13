@@ -8,7 +8,6 @@ code = File.open('day13.txt').readline.split(',').map(&:to_i)
 
 class Computer
   def initialize(code)
-    @inputs = []
     @halted = false
     @ip = 0
     @relative_base = 0
@@ -17,23 +16,20 @@ class Computer
     code.each_with_index { |value, i| @code[i] = value }
   end
 
-  def compute
+  def compute(input_source = nil)
+    @input_source = input_source
     while @code[@ip] != 99
       case @code[@ip] % 100
       when 1
-        value1, value2, store = parse3(@ip)
+        value1, value2, _store = parse3(@ip)
         write_value(@ip + 3, value1 + value2, @code[@ip] / 10000)
         @ip += 4
       when 2
-        value1, value2, store = parse3(@ip)
+        value1, value2, _store = parse3(@ip)
         write_value(@ip + 3, value1 * value2, @code[@ip] / 10000)
         @ip += 4
       when 3
-        if @inputs.empty?
-          puts "No inputs at ip #{@ip}"
-          exit(1)
-        end
-        write_value(@ip + 1, @inputs.shift, @code[@ip] / 100)
+        write_value(@ip + 1, @input_source.next_input, @code[@ip] / 100)
         @ip += 2
       when 4
         value = read_value(@ip + 1, @code[@ip] / 100)
@@ -41,17 +37,17 @@ class Computer
         @ip += 2
       when 5
         value1, value2 = parse2(@ip)
-        @ip = (value1 != 0) ? value2 : (@ip + 3)
+        @ip = value1 != 0 ? value2 : @ip + 3
       when 6
         value1, value2 = parse2(@ip)
-        @ip = (value1 == 0) ? value2 : (@ip + 3)
+        @ip = value1 == 0 ? value2 : @ip + 3
       when 7
-        value1, value2, store = parse3(@ip)
-        write_value(@ip + 3, (value1 < value2) ? 1 : 0, @code[@ip] / 10000)
+        value1, value2, _store = parse3(@ip)
+        write_value(@ip + 3, value1 < value2 ? 1 : 0, @code[@ip] / 10000)
         @ip += 4
       when 8
-        value1, value2, store = parse3(@ip)
-        write_value(@ip + 3, (value1 == value2) ? 1 : 0, @code[@ip] / 10000)
+        value1, value2, _store = parse3(@ip)
+        write_value(@ip + 3, value1 == value2 ? 1 : 0, @code[@ip] / 10000)
         @ip += 4
       when 9
         @relative_base += read_value(@ip + 1, @code[@ip] / 100)
@@ -66,10 +62,6 @@ class Computer
 
   def halted?
     @halted
-  end
-
-  def add_input(input)
-    @inputs << input
   end
 
   private
@@ -122,17 +114,63 @@ class Computer
   end
 end
 
-grid = {}
-data = []
+class Game
+  attr_reader :grid, :score
 
-game = Computer.new(code.dup)
-game.compute do |output|
-  if data.length < 2
-    data << output
-  else
-    grid[[data[0], data[1]]] = output
-    data.clear
+  def initialize(code)
+    @computer = Computer.new(code)
+    @grid = {}
+    @outputs = []
+    @score = 0
+    @paddle = nil
+    @ball = nil
+  end
+
+  def play
+    @computer.compute(self) do |output|
+      if @outputs.length < 2
+        @outputs << output
+      else
+        x = @outputs[0]
+        y = @outputs[1]
+        if x == -1 && y == 0
+          @score = output
+        else
+          grid[@outputs] = output
+
+          case output
+          when 3
+            @paddle = @outputs.dup
+          when 4
+            @ball = @outputs.dup
+          end
+        end
+        @outputs.clear
+      end
+    end
+  end
+
+  def next_input
+    if @paddle.empty?
+      0
+    else
+      offset = @paddle[0] - @ball[0]
+      if offset > 0
+        -1
+      else
+        offset < 0 ? 1 : 0
+      end
+    end
   end
 end
 
-puts grid.values.count(2)
+game = Game.new(code.dup)
+game.play
+puts game.grid.values.count(2)
+
+hacked_code = code.dup
+hacked_code[0] = 2
+game = Game.new(hacked_code)
+game.play
+
+puts game.score
