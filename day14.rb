@@ -31,8 +31,12 @@ class Reactor
     @products = Hash.new(0)
   end
 
-  def perform
-    react(@reactions['FUEL'], 0)
+  def perform(needed)
+    ore = 0
+    needed.times do
+      ore += react(@reactions['FUEL'], 0)
+    end
+    ore
   end
 
   private
@@ -60,4 +64,13 @@ File.open('day14.txt').readlines.each do |line|
   reaction = Reaction.new(inputs, outputs)
   reactions[reaction.output.name] = reaction
 end
-puts Reactor.new(reactions).perform
+puts Reactor.new(reactions).perform(1)
+
+puts Reactor.new(reactions).perform(100000)
+# ores = 0
+# fuel = 0
+# reactor = Reactor.new(reactions)
+# until ores >= 1_000_000_000_000
+#   ores += reactor.perform
+#   fuel += 1
+# end
