@@ -39,16 +39,14 @@ class Robot
 
   def explore
     @computer.compute(self) do |output|
-      location  = @path.last.location
-      puts "Output: #{output} at #{location}"
-      @map[location] = case output
+      puts @path.length
+      @map[@path.last.location] = case output
       when 0
-        @path.pop
         '#'
       when 1
         '.'
       when 2
-        puts "Steps to oxygen: #{@path.length}"
+        puts @path.length
         exit(0)
         'O'
       end
@@ -57,7 +55,6 @@ class Robot
 
   def next_input
     next_step
-    puts "Input: #{@path.last.direction} at #{@path.last.location}"
     @path.last.direction
   end
 
@@ -79,7 +76,6 @@ class Robot
 
   def next_step
     while true
-      print_map if @path.last.nil?
       next_direction = @path.last.direction
       # puts "#{next_direction} #{@x} #{@y} #{@path.length}"
       if next_direction == 0
